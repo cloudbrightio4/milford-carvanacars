@@ -22,6 +22,10 @@ app.use('*', async (c, next) => {
 });
 app.options('*', (c) => c.text('', 204));
 
+app.onError((err, c) => {
+  return c.json({ error: 'internal', detail: err instanceof Error ? err.message : String(err) }, 500);
+});
+
 // ---------- helpers ----------
 const tryJson = (s: string) => {
   try { return JSON.parse(s); } catch { return []; }
