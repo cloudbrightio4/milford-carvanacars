@@ -27,3 +27,5 @@ data/wp-cars.json
 data/categories.json
 data/tags.json
 data/posts.json
+data/img-cache/
+data/img-map.json

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 
 type Env = {
   DB: D1Database;
+  IMAGES: R2Bucket;
   FRONTEND_ORIGIN: string;
   SESSION_SECRET: string;
   CONTACT_EMAIL: string;
@@ -58,6 +59,17 @@ async function hashPassword(password: string, salt: string) {
 
 // ---------- health ----------
 app.get('/api/health', (c) => c.json({ ok: true, now: new Date().toISOString() }));
+
+// ---------- image serving (R2) ----------
+app.get('/img/:key', async (c) => {
+  const key = c.req.param('key');
+  const obj = await c.env.IMAGES.get(key);
+  if (!obj) return c.notFound();
+  const type = key.endsWith('.png') ? 'image/png' : /\.jpe?g$/.test(key) ? 'image/jpeg' : key.endsWith('.webp') ? 'image/webp' : key.endsWith('.gif') ? 'image/gif' : 'application/octet-stream';
+  c.header('Content-Type', type);
+  c.header('Cache-Control', 'public, max-age=31536000, immutable');
+  return c.body(obj.body);
+});
 
 // ---------- inventory ----------
 app.get('/api/cars', async (c) => {

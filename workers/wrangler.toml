@@ -7,5 +7,9 @@ binding = "DB"
 database_name = "milford-carvanacars"
 database_id = "89fdf4ea-733e-4941-808f-df81ec93f0d2"
 
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "milford-carvanacars-images"
+
 [vars]
 FRONTEND_ORIGIN = "https://milford-carvanacars.pages.dev"
