@@ -23,7 +23,8 @@ app.use('*', async (c, next) => {
 app.options('*', (c) => c.text('', 204));
 
 app.onError((err, c) => {
-  return c.json({ error: 'internal', detail: err instanceof Error ? err.message : String(err) }, 500);
+  console.error(err instanceof Error ? err.message : String(err));
+  return c.json({ error: 'internal error' }, 500);
 });
 
 // ---------- helpers ----------
@@ -46,7 +47,7 @@ async function hashPassword(password: string, salt: string) {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
   const derived = await crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: enc.encode(salt), iterations: 120000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: enc.encode(salt), iterations: 100000, hash: 'SHA-256' },
     key,
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
     true,
