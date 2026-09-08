@@ -36,14 +36,19 @@ function carRow(r: Record<string, unknown>) {
   };
 }
 
-// ---------- password hashing (WebCrypto PBKDF2) ----------
-function bufToHex(b: Uint8Array) { return [...b].map((x) => x.toString(16).padStart(2, '0')).join(''); }
+// ---------- password hashing (WebCrypto PBKDF2; Workers lacks deriveBits) ----------
+function bufToHex(b: ArrayBuffer | Uint8Array) { return [...new Uint8Array(b as ArrayBuffer)].map((x) => x.toString(16).padStart(2, '0')).join(''); }
 async function hashPassword(password: string, salt: string) {
   const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt: enc.encode(salt), iterations: 120000, hash: 'SHA-256' }, key, 256);
-  return bufToHex(new Uint8Array(bits));
+  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const derived = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: enc.encode(salt), iterations: 120000, hash: 'SHA-256' },
+    key,
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    true,
+    ['sign'],
+  );
+  return bufToHex(await crypto.subtle.exportKey('raw', derived));
 }
 
 // ---------- health ----------
