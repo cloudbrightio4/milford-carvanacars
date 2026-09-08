@@ -1,0 +1,73 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { API_BASE } from '../lib/api';
+---
+<Layout title="Login / Register">
+  <div class="container page auth">
+    <h1>Account</h1>
+    <div class="tabs">
+      <button id="tab-login" class="tab active">Login</button>
+      <button id="tab-register" class="tab">Register</button>
+    </div>
+
+    <form id="login-form" class="panel">
+      <div class="field"><label>Email</label><input name="email" type="email" required /></div>
+      <div class="field"><label>Password</label><input name="password" type="password" required /></div>
+      <button class="btn" type="submit">Log in</button>
+      <p class="status" id="login-status"></p>
+    </form>
+
+    <form id="register-form" class="panel" style="display:none">
+      <div class="field"><label>Name</label><input name="name" type="text" /></div>
+      <div class="field"><label>Email</label><input name="email" type="email" required /></div>
+      <div class="field"><label>Password (min 8 chars)</label><input name="password" type="password" minlength="8" required /></div>
+      <button class="btn" type="submit">Create account</button>
+      <p class="status" id="register-status"></p>
+    </form>
+  </div>
+</Layout>
+
+<script define:vars={{ API_BASE }}>
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+  const show = (which) => {
+    const login = which === 'login';
+    loginForm.style.display = login ? '' : 'none';
+    registerForm.style.display = login ? 'none' : '';
+    tabLogin.classList.toggle('active', login);
+    tabRegister.classList.toggle('active', !login);
+  };
+  tabLogin.addEventListener('click', () => show('login'));
+  tabRegister.addEventListener('click', () => show('register'));
+
+  async function post(url, form, statusEl) {
+    const fd = new FormData(form);
+    const body = Object.fromEntries(fd.entries());
+    statusEl.textContent = 'Working…';
+    try {
+      const r = await fetch(`${API_BASE}${url}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const j = await r.json();
+      if (j.ok && j.token) {
+        localStorage.setItem('mc_token', j.token);
+        localStorage.setItem('mc_user', JSON.stringify(j.user));
+        location.href = '/panel/';
+      } else {
+        statusEl.textContent = j.error || 'Something went wrong.';
+      }
+    } catch { statusEl.textContent = 'Network error. Please try again.'; }
+  }
+  loginForm.addEventListener('submit', (e) => { e.preventDefault(); post('/api/auth/login', loginForm, document.getElementById('login-status')); });
+  registerForm.addEventListener('submit', (e) => { e.preventDefault(); post('/api/auth/register', registerForm, document.getElementById('register-status')); });
+</script>
+
+<style>
+  .page { padding-top: 40px; }
+  .auth { max-width: 440px; }
+  .tabs { display: flex; gap: 8px; margin: 16px 0; }
+  .tab { padding: 10px 20px; border: 1px solid var(--border); background: #fff; border-radius: 8px; cursor: pointer; font-weight: 700; }
+  .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .panel { background: var(--bg-soft); padding: 26px; border-radius: 12px; }
+  .status { margin-top: 14px; font-weight: 700; color: var(--primary); }
+</style>

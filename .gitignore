@@ -1,0 +1,29 @@
+node_modules/
+.npm-cache/
+dist/
+.astro/
+.wrangler/
+workers/node_modules/
+
+# local-only credentials reader (reads ~/.dsh/.credentials.yaml)
+lib/
+
+# one-time setup/recon scripts
+create-repo.mjs
+setup-d1.mjs
+extract.mjs
+recon.mjs
+recon2.mjs
+inspect-cars.mjs
+resolve-media.mjs
+extract-theme.mjs
+extract-css.mjs
+
+# intermediate extracted data (large / raw)
+data/home.html
+data/media-p1.json
+data/cars.json
+data/wp-cars.json
+data/categories.json
+data/tags.json
+data/posts.json

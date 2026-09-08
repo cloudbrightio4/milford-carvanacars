@@ -1,0 +1,35 @@
+---
+import { formatPrice, formatMileage } from '../lib/format';
+interface Props { car: any; }
+const { car } = Astro.props;
+const img = car.featured_image || '/placeholder.svg';
+---
+<a class="car-card" href={`/listing/${car.slug}/`}>
+  <div class="thumb">
+    <img src={img} alt={car.title} loading="lazy" />
+    <span class="badge">{car.condition || 'Used'}</span>
+    <span class="price-tag">{formatPrice(car.price)}</span>
+  </div>
+  <div class="body">
+    <h3 class="title">{car.title}</h3>
+    <div class="meta">
+      {car.year && <span>{car.year}</span>}
+      {car.mileage != null && <span>{formatMileage(car.mileage)}</span>}
+      {car.transmission && <span>{car.transmission}</span>}
+    </div>
+  </div>
+</a>
+
+<style>
+  .car-card { display: block; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: box-shadow .15s, transform .15s; }
+  .car-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.08); transform: translateY(-2px); text-decoration: none; }
+  .thumb { position: relative; aspect-ratio: 4/3; background: var(--bg-soft); overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb .badge { position: absolute; top: 10px; left: 10px; }
+  .price-tag { position: absolute; bottom: 10px; right: 10px; background: rgba(21,21,21,.82); color: #fff; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 14px; }
+  .body { padding: 14px 16px; }
+  .title { font-size: 16px; margin: 0 0 8px; color: var(--dark); }
+  .meta { display: flex; gap: 14px; font-size: 13px; color: var(--muted); }
+  .meta span::before { content: '•'; margin-right: 14px; }
+  .meta span:first-child::before { content: ''; margin-right: 0; }
+</style>

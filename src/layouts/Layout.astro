@@ -1,0 +1,62 @@
+---
+import '../styles/global.css';
+interface Props { title?: string; description?: string; }
+const { title, description } = Astro.props;
+const siteTitle = 'Milford Carvana Cars';
+const fullTitle = title ? `${title} — ${siteTitle}` : siteTitle;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Muli:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="/" class="logo">Milford <span>Carvana</span> Cars</a>
+        <nav class="nav">
+          <a href="/">Home</a>
+          <a href="/search/">Listings</a>
+          <a href="/shipping/">Shipping</a>
+          <a href="/return-policy/">Return policy</a>
+          <a href="/privacy-policy/">Privacy Policy</a>
+          <a href="/loan-calculator/">Loan calculator</a>
+          <a href="/contact-us/">Contact</a>
+        </nav>
+      </div>
+    </header>
+    <main><slot /></main>
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© {new Date().getFullYear()} Milford Carvana Cars. All rights reserved.</p>
+        <p class="muted">Classic &amp; collector cars.</p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .site-header { background: var(--dark); color: #fff; position: sticky; top: 0; z-index: 50; }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .logo { color: #fff; font-size: 22px; font-weight: 900; letter-spacing: -.02em; }
+  .logo span { color: var(--primary); }
+  .logo:hover { text-decoration: none; }
+  .nav { display: flex; gap: 22px; flex-wrap: wrap; }
+  .nav a { color: #e5e7eb; font-size: 14px; font-weight: 600; }
+  .nav a:hover { color: #fff; text-decoration: none; }
+  .site-footer { background: var(--dark); color: #e5e7eb; margin-top: 60px; }
+  .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 24px 20px; font-size: 14px; }
+  .footer-inner p { margin: 0; }
+  .footer-inner .muted { color: #9ca3af; }
+  @media (max-width: 760px) {
+    .header-inner { flex-direction: column; height: auto; padding: 12px 20px; gap: 8px; }
+    .nav { gap: 12px; justify-content: center; }
+  }
+</style>

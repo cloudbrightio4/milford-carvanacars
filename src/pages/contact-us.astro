@@ -1,0 +1,46 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { API_BASE } from '../lib/api';
+---
+<Layout title="Contact" description="Get in touch with Milford Carvana Cars. Ask about a vehicle, financing, or shipping.">
+  <div class="container page narrow">
+    <h1>Contact us</h1>
+    <p class="muted">Questions about a vehicle, financing, or shipping? Send us a message and we'll get back to you.</p>
+    <form id="contact-form" class="contact-form">
+      <div class="row">
+        <div class="field"><label>Name</label><input name="name" type="text" /></div>
+        <div class="field"><label>Email *</label><input name="email" type="email" required /></div>
+      </div>
+      <div class="field"><label>Phone</label><input name="phone" type="tel" /></div>
+      <div class="field"><label>Message *</label><textarea name="message" rows="5" required></textarea></div>
+      <button type="submit" class="btn">Send message</button>
+      <p id="form-status" class="form-status" role="status"></p>
+    </form>
+  </div>
+</Layout>
+
+<script define:vars={{ API_BASE }}>
+  const form = document.getElementById('contact-form');
+  const status = document.getElementById('form-status');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const body = Object.fromEntries(fd.entries());
+    status.textContent = 'Sending…';
+    try {
+      const r = await fetch(`${API_BASE}/api/contact`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const j = await r.json();
+      status.textContent = j.ok ? 'Thanks! Your message has been sent.' : (j.error || 'Something went wrong.');
+      if (j.ok) form.reset();
+    } catch { status.textContent = 'Network error. Please try again.'; }
+  });
+</script>
+
+<style>
+  .page { padding-top: 40px; }
+  .narrow { max-width: 680px; }
+  .contact-form { background: var(--bg-soft); padding: 28px; border-radius: 12px; margin-top: 20px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-status { margin-top: 14px; font-weight: 700; }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+</style>

@@ -1,0 +1,37 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { API_BASE } from '../lib/api';
+---
+<Layout title="My Account">
+  <div class="container page narrow">
+    <h1>My Account</h1>
+    <div id="content" class="panel">
+      <p class="muted">Checking your session…</p>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ API_BASE }}>
+  const content = document.getElementById('content');
+  const token = localStorage.getItem('mc_token');
+  (async () => {
+    if (!token) { location.href = '/login-register/'; return; }
+    const r = await fetch(`${API_BASE}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (r.status !== 200) { localStorage.removeItem('mc_token'); localStorage.removeItem('mc_user'); location.href = '/login-register/'; return; }
+    const { user } = await r.json();
+    content.innerHTML = `
+      <p>Signed in as <strong>${user.email}</strong>${user.name ? ` (${user.name})` : ''}</p>
+      <p class="muted">This is your dealer account. Saved vehicles, inquiries, and listing management are coming soon.</p>
+      <button class="btn" id="logout">Log out</button>`;
+    document.getElementById('logout').addEventListener('click', () => {
+      localStorage.removeItem('mc_token'); localStorage.removeItem('mc_user');
+      location.href = '/';
+    });
+  })();
+</script>
+
+<style>
+  .page { padding-top: 40px; }
+  .narrow { max-width: 560px; }
+  .panel { background: var(--bg-soft); padding: 28px; border-radius: 12px; }
+</style>

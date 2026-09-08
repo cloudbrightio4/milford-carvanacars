@@ -1,0 +1,11 @@
+name = "milford-carvanacars-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "milford-carvanacars"
+database_id = "89fdf4ea-733e-4941-808f-df81ec93f0d2"
+
+[vars]
+FRONTEND_ORIGIN = "https://milford-carvanacars.pages.dev"

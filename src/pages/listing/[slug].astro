@@ -1,0 +1,70 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import seed from '../../../data/seed-cars.json';
+import { formatPrice, formatMileage } from '../../lib/format';
+
+export function getStaticPaths() {
+  return (seed as any[]).map((c) => ({ params: { slug: c.slug } }));
+}
+
+const { slug } = Astro.params;
+const car = (seed as any[]).find((c) => c.slug === slug);
+
+const spec = [
+  ['Make', car?.make], ['Model', car?.model], ['Year', car?.year],
+  ['Mileage', car?.mileage != null ? formatMileage(car.mileage) : null],
+  ['Condition', car?.condition], ['Body type', car?.body_type],
+  ['Transmission', car?.transmission], ['Fuel', car?.fuel_type],
+  ['Drive', car?.drive_type], ['Engine size', car?.engine_size ? car.engine_size + 'L' : null],
+  ['Cylinders', car?.cylinders], ['Color', car?.color], ['Doors', car?.doors],
+  ['VIN', car?.vin],
+].filter(([, v]) => v != null && v !== '');
+---
+<Layout title={car?.title} description={car?.title + ' — ' + formatPrice(car?.price)}>
+  <div class="container detail">
+    <nav class="crumb"><a href="/">Home</a> / <a href="/search/">Listings</a> / <span>{car?.title}</span></nav>
+    <div class="detail-grid">
+      <div class="gallery">
+        <img class="main-img" src={car?.gallery?.[0] || car?.featured_image} alt={car?.title} />
+        {car?.gallery?.length > 1 && (
+          <div class="thumbs">
+            {car.gallery.map((g: string) => <img src={g} alt="" loading="lazy" />)}
+          </div>
+        )}
+      </div>
+      <aside class="info">
+        <span class="badge">{car?.condition || 'Used'}</span>
+        <h1>{car?.title}</h1>
+        <div class="price">{formatPrice(car?.price)}</div>
+        <dl class="spec">
+          {spec.map(([k, v]) => <div class="spec-row"><dt>{k}</dt><dd>{v}</dd></div>)}
+        </dl>
+        <a href="/contact-us/" class="btn">Inquire about this car</a>
+      </aside>
+    </div>
+    {car?.description && (
+      <section class="desc">
+        <h2>Description</h2>
+        <div set:html={car.description} />
+      </section>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .detail { padding-top: 24px; }
+  .crumb { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .crumb a { color: var(--muted); }
+  .detail-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; }
+  .main-img { border-radius: 14px; width: 100%; aspect-ratio: 4/3; object-fit: cover; background: var(--bg-soft); }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 10px; }
+  .thumbs img { border-radius: 8px; aspect-ratio: 4/3; object-fit: cover; cursor: pointer; }
+  .info h1 { font-size: 30px; margin: 10px 0 6px; }
+  .price { font-size: 30px; margin-bottom: 20px; }
+  .spec { margin: 0 0 24px; border-top: 1px solid var(--border); }
+  .spec-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .spec-row dt { color: var(--muted); }
+  .spec-row dd { margin: 0; font-weight: 700; color: var(--dark); }
+  .desc { margin-top: 40px; max-width: 820px; }
+  @media (max-width: 820px) { .detail-grid { grid-template-columns: 1fr; } }
+</style>

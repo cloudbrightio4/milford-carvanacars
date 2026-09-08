@@ -1,0 +1,121 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { API_BASE } from '../lib/api';
+---
+<Layout title="Inventory" description="Browse our full inventory of classic and collector cars. Filter by make, condition, body type, and price.">
+  <div class="container page">
+    <h1>Inventory</h1>
+    <div class="search-layout">
+      <aside class="filters">
+        <div class="field">
+          <label>Search</label>
+          <input type="text" id="f-search" placeholder="Make, model, VIN…" />
+        </div>
+        <div class="field">
+          <label>Make</label>
+          <select id="f-make"><option value="">All makes</option></select>
+        </div>
+        <div class="field">
+          <label>Condition</label>
+          <select id="f-condition"><option value="">Any</option></select>
+        </div>
+        <div class="field">
+          <label>Body type</label>
+          <select id="f-body"><option value="">Any</option></select>
+        </div>
+        <div class="field">
+          <label>Transmission</label>
+          <select id="f-transmission"><option value="">Any</option></select>
+        </div>
+        <div class="field">
+          <label>Max price</label>
+          <input type="number" id="f-price-max" placeholder="Any" />
+        </div>
+        <div class="field">
+          <label>Sort by</label>
+          <select id="f-sort">
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price: low to high</option>
+            <option value="price_desc">Price: high to low</option>
+            <option value="year_desc">Year: newest</option>
+            <option value="mileage_asc">Mileage: lowest</option>
+          </select>
+        </div>
+        <button class="btn ghost" id="f-reset">Reset filters</button>
+      </aside>
+      <div class="results">
+        <div id="count" class="muted"></div>
+        <div id="grid" class="grid"></div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ API_BASE }}>
+  const $ = (id) => document.getElementById(id);
+  const grid = $('grid');
+  const count = $('count');
+  const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
+
+  function card(c) {
+    const img = c.featured_image || '/placeholder.svg';
+    return `<a class="card" href="/listing/${c.slug}/">
+      <div class="thumb"><img src="${img}" alt="${c.title}" loading="lazy" />
+        <span class="badge">${c.condition || 'Used'}</span>
+        <span class="ptag">${money(c.price)}</span></div>
+      <div class="body"><h3>${c.title}</h3>
+        <div class="meta"><span>${c.year || ''}</span><span>${c.mileage != null ? Math.round(c.mileage).toLocaleString('en-US') + ' mi' : ''}</span><span>${c.transmission || ''}</span></div>
+      </div></a>`;
+  }
+
+  async function load() {
+    const q = new URLSearchParams();
+    const add = (k, el) => { const v = $(el).value; if (v) q.set(k, v); };
+    add('search', 'f-search'); add('make', 'f-make'); add('condition', 'f-condition');
+    add('body_type', 'f-body'); add('transmission', 'f-transmission');
+    add('price_max', 'f-price-max'); add('sort', 'f-sort');
+    const r = await fetch(`${API_BASE}/api/cars?${q.toString()}`);
+    const data = await r.json();
+    count.textContent = data.total + ' vehicles';
+    grid.innerHTML = (data.results || []).map(card).join('') || '<p class="muted">No vehicles match your filters.</p>';
+  }
+
+  async function loadFacets() {
+    const r = await fetch(`${API_BASE}/api/facets`);
+    const d = await r.json();
+    const fill = (id, list) => { const s = $(id); for (const v of list || []) { const o = document.createElement('option'); o.value = v; o.textContent = v; s.appendChild(o); } };
+    fill('f-make', d.facets?.make);
+    fill('f-condition', d.facets?.condition);
+    fill('f-body', d.facets?.body_type);
+    fill('f-transmission', d.facets?.transmission);
+  }
+
+  ['f-search', 'f-make', 'f-condition', 'f-body', 'f-transmission', 'f-price-max', 'f-sort']
+    .forEach((id) => $(id).addEventListener('change', load));
+  $('f-search').addEventListener('input', debounce(load, 300));
+  $('f-reset').addEventListener('click', () => {
+    ['f-search', 'f-make', 'f-condition', 'f-body', 'f-transmission', 'f-price-max'].forEach((id) => ($(id).value = ''));
+    $('f-sort').value = 'newest'; load();
+  });
+  function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+  loadFacets(); load();
+</script>
+
+<style>
+  .page { padding-top: 32px; }
+  .search-layout { display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start; }
+  .filters { background: var(--bg-soft); padding: 20px; border-radius: 12px; position: sticky; top: 84px; }
+  #count { margin-bottom: 14px; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+  .card { display: block; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .card:hover { text-decoration: none; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+  .thumb { position: relative; aspect-ratio: 4/3; background: var(--bg-soft); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb .badge { position: absolute; top: 10px; left: 10px; }
+  .ptag { position: absolute; bottom: 10px; right: 10px; background: rgba(21,21,21,.82); color: #fff; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 14px; }
+  .body { padding: 14px 16px; }
+  .body h3 { font-size: 16px; margin: 0 0 8px; color: var(--dark); }
+  .meta { display: flex; gap: 12px; font-size: 13px; color: var(--muted); }
+  @media (max-width: 800px) { .search-layout { grid-template-columns: 1fr; } .filters { position: static; } }
+</style>

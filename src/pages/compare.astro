@@ -1,0 +1,65 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { API_BASE } from '../lib/api';
+---
+<Layout title="Compare" description="Compare vehicles side by side.">
+  <div class="container page">
+    <h1>Compare vehicles</h1>
+    <p class="muted">Pick up to three vehicles to compare side by side.</p>
+    <div class="pickers">
+      <select id="c1"><option value="">— Choose vehicle —</option></select>
+      <select id="c2"><option value="">— Choose vehicle —</option></select>
+      <select id="c3"><option value="">— Choose vehicle —</option></select>
+    </div>
+    <div id="table"></div>
+  </div>
+</Layout>
+
+<script define:vars={{ API_BASE }}>
+  const el = (id) => document.getElementById(id);
+  const money = (n) => n == null ? '—' : '$' + Math.round(n).toLocaleString('en-US');
+
+  async function init() {
+    const r = await fetch(`${API_BASE}/api/cars?limit=100`);
+    const d = await r.json();
+    const cars = d.results || [];
+    for (const id of ['c1', 'c2', 'c3']) {
+      const s = el(id);
+      for (const c of cars) { const o = document.createElement('option'); o.value = c.id; o.textContent = c.title; s.appendChild(o); }
+    }
+    render();
+  }
+
+  async function render() {
+    const ids = ['c1', 'c2', 'c3'].map((id) => el(id).value).filter(Boolean);
+    const box = el('table');
+    if (!ids.length) { box.innerHTML = ''; return; }
+    const r = await fetch(`${API_BASE}/api/compare?ids=${ids.join(',')}`);
+    const d = await r.json();
+    const cars = d.results || [];
+    const rows = [
+      ['Price', (c) => money(c.price)], ['Year', (c) => c.year], ['Make', (c) => c.make],
+      ['Model', (c) => c.model], ['Mileage', (c) => c.mileage != null ? Math.round(c.mileage).toLocaleString('en-US') + ' mi' : '—'],
+      ['Condition', (c) => c.condition], ['Body', (c) => c.body_type], ['Transmission', (c) => c.transmission],
+      ['Fuel', (c) => c.fuel_type], ['Drive', (c) => c.drive_type], ['Engine', (c) => c.engine_size ? c.engine_size + 'L' : '—'],
+      ['Color', (c) => c.color], ['VIN', (c) => c.vin],
+    ];
+    box.innerHTML = `<table class="cmp"><thead><tr><th></th>${cars.map((c) => `<th><a href="/listing/${c.slug}/">${c.title}</a></th>`).join('')}</tr></thead>
+      <tbody>${rows.map(([label, fn]) => `<tr><td>${label}</td>${cars.map((c) => `<td>${fn(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+
+  ['c1', 'c2', 'c3'].forEach((id) => el(id).addEventListener('change', render));
+  init();
+</script>
+
+<style>
+  .page { padding-top: 40px; }
+  .pickers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
+  .pickers select { padding: 11px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
+  .cmp { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .cmp th, .cmp td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .cmp th { background: var(--dark); color: #fff; }
+  .cmp th a { color: #fff; }
+  .cmp td:first-child { color: var(--muted); font-weight: 700; }
+  @media (max-width: 700px) { .pickers { grid-template-columns: 1fr; } }
+</style>
